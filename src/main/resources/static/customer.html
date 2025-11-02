@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Customer Management (Simple)</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #eef2f3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  .container {
+    width: 600px;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  h2 { text-align: center; color: #007bff; }
+  input {
+    width: 100%; padding: 8px; margin: 6px 0;
+    border: 1px solid #ccc; border-radius: 6px;
+  }
+  button {
+    background-color: #007bff; color: white; border: none;
+    padding: 8px 12px; margin: 5px; border-radius: 5px; cursor: pointer;
+  }
+  button:hover { background-color: #0056b3; }
+  .hidden { display: none; }
+  #output { margin-top: 15px; background: #f7f7f7; padding: 10px; border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+  th { background-color: #007bff; color: white; }
+  .success { color: green; font-weight: bold; }
+  .error { color: red; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Customer Management</h2>
+
+  <!-- Main Menu -->
+  <div id="menu">
+    <button onclick="show('add')">Add Customer</button>
+    <button onclick="show('update')">Update Customer</button>
+    <button onclick="show('delete')">Delete Customer</button>
+    <button onclick="show('showAll')">Show All</button>
+    <button onclick="show('byEmail')">Get by Email</button>
+    <button onclick="show('byId')">Get by ID</button>
+	
+	<button class="btn-back" onclick="goBack()">⬅ Back to Main Page</button>
+  </div>
+
+  <!-- Add Form -->
+  <div id="add" class="hidden">
+    <input type="text" id="addName" placeholder="Name">
+    <input type="email" id="addEmail" placeholder="Email">
+    <input type="text" id="addPhone" placeholder="Phone">
+    <input type="text" id="addAddress" placeholder="Address">
+    <button onclick="addCustomer()">Add</button>
+    <button onclick="back()">Back</button>
+  </div>
+
+  <!-- Update Form -->
+  <div id="update" class="hidden">
+    <input type="number" id="updateId" placeholder="ID">
+    <input type="text" id="updateName" placeholder="Name">
+    <input type="email" id="updateEmail" placeholder="Email">
+    <input type="text" id="updatePhone" placeholder="Phone">
+    <input type="text" id="updateAddress" placeholder="Address">
+    <button onclick="updateCustomer()">Update</button>
+    <button onclick="back()">Back</button>
+  </div>
+
+  <!-- Delete Form -->
+  <div id="delete" class="hidden">
+    <input type="number" id="deleteId" placeholder="Enter Customer ID">
+    <button onclick="deleteCustomer()">Delete</button>
+    <button onclick="back()">Back</button>
+  </div>
+
+  <!-- Show All -->
+  <div id="showAll" class="hidden">
+    <button onclick="getAll()">Show Customers</button>
+    <button onclick="back()">Back</button>
+  </div>
+
+  <!-- Get By Email -->
+  <div id="byEmail" class="hidden">
+    <input type="email" id="emailSearch" placeholder="Enter Email">
+    <button onclick="getByEmail()">Search</button>
+    <button onclick="back()">Back</button>
+  </div>
+
+  <!-- Get By ID -->
+  <div id="byId" class="hidden">
+    <input type="number" id="idSearch" placeholder="Enter ID">
+    <button onclick="getById()">Search</button>
+    <button onclick="back()">Back</button>
+  </div>
+
+  <div id="output"></div>
+</div>
+
+<script>
+  var BASE_URL = "http://localhost:8080/customers";
+
+  // Function to show selected form
+  function show(id) {
+    hideAll();
+    document.getElementById("menu").classList.add("hidden");
+    document.getElementById(id).classList.remove("hidden");
+    document.getElementById("output").innerHTML = "";
+  }
+
+  // Function to go back to main menu
+  function back() {
+    hideAll();
+    document.getElementById("menu").classList.remove("hidden");
+    document.getElementById("output").innerHTML = "";
+  }
+
+  // Hide all sections
+  function hideAll() {
+    var divs = document.querySelectorAll(".container > div");
+    for (var i = 0; i < divs.length; i++) {
+      if (divs[i].id !== "output") divs[i].classList.add("hidden");
+    }
+  }
+
+  // -------- CRUD FUNCTIONS --------
+
+  // Add new customer
+  function addCustomer() {
+    var data = {
+      name: document.getElementById("addName").value,
+      email: document.getElementById("addEmail").value,
+      phoneNumber: document.getElementById("addPhone").value,
+      address: document.getElementById("addAddress").value
+    };
+
+    fetch(BASE_URL + "/add", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(data)
+    }).then(function(res) {
+      if (res.ok) showMessage("Customer added successfully!", true);
+      else showMessage("Failed to add customer!", false);
+    });
+  }
+
+  // Update customer
+  function updateCustomer() {
+    var id = document.getElementById("updateId").value;
+    var data = {
+      name: document.getElementById("updateName").value,
+      email: document.getElementById("updateEmail").value,
+      phoneNumber: document.getElementById("updatePhone").value,
+      address: document.getElementById("updateAddress").value
+    };
+
+    fetch(BASE_URL + "/update/" + id, {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(data)
+    }).then(function(res) {
+      if (res.ok) showMessage("Customer updated successfully!", true);
+      else showMessage("Failed to update customer!", false);
+    });
+  }
+
+  // Delete customer by ID
+  function deleteCustomer() {
+    var id = document.getElementById("deleteId").value;
+    fetch(BASE_URL + "/delete/" + id, { method: "DELETE" })
+    .then(function(res) { return res.text(); })
+    .then(function(text) { document.getElementById("output").innerHTML = text; });
+  }
+
+  // Get all customers
+  function getAll() {
+    fetch(BASE_URL + "/all")
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.length == 0) {
+        document.getElementById("output").innerHTML = "No customers found!";
+        return;
+      }
+      var table = "<table><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Address</th></tr>";
+      for (var i = 0; i < data.length; i++) {
+        table += "<tr><td>" + data[i].id + "</td><td>" + data[i].name + "</td><td>" +
+                 data[i].email + "</td><td>" + data[i].phoneNumber + "</td><td>" + data[i].address + "</td></tr>";
+      }
+      table += "</table>";
+      document.getElementById("output").innerHTML = table;
+    });
+  }
+
+  // Get customer by email
+  function getByEmail() {
+    var email = document.getElementById("emailSearch").value;
+    fetch(BASE_URL + "/email/" + email)
+    .then(function(res) {
+      if (!res.ok) throw new Error("Not found");
+      return res.json();
+    })
+    .then(function(c) {
+      var info = "<b>ID:</b> " + c.id + "<br>" +
+                 "<b>Name:</b> " + c.name + "<br>" +
+                 "<b>Email:</b> " + c.email + "<br>" +
+                 "<b>Phone:</b> " + c.phoneNumber + "<br>" +
+                 "<b>Address:</b> " + c.address;
+      document.getElementById("output").innerHTML = info;
+    })
+    .catch(function() {
+      showMessage("Customer not found!", false);
+    });
+  }
+
+  // Get customer by ID
+  function getById() {
+    var id = document.getElementById("idSearch").value;
+    fetch(BASE_URL + "/" + id)
+    .then(function(res) {
+      if (!res.ok) throw new Error("Not found");
+      return res.json();
+    })
+    .then(function(c) {
+      var info = "<b>ID:</b> " + c.id + "<br>" +
+                 "<b>Name:</b> " + c.name + "<br>" +
+                 "<b>Email:</b> " + c.email + "<br>" +
+                 "<b>Phone:</b> " + c.phoneNumber + "<br>" +
+                 "<b>Address:</b> " + c.address;
+      document.getElementById("output").innerHTML = info;
+    })
+    .catch(function() {
+      showMessage("Customer not found!", false);
+    });
+  }
+
+  // Utility message function
+  function showMessage(msg, success) {
+    var colorClass = success ? "success" : "error";
+    document.getElementById("output").innerHTML = "<p class='" + colorClass + "'>" + msg + "</p>";
+  }
+  
+  function goBack() {
+        window.location.href = "index.html"; 
+      }
+
+</script>
+</body>
+</html>

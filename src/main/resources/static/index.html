@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Pharmacy System</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #007bff, #00c6ff);
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background-color: white;
+      width: 450px;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    h1 {
+      color: #007bff;
+      margin-bottom: 30px;
+    }
+
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    footer {
+      margin-top: 25px;
+      color: #555;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>💊 Smart Pharmacy System</h1>
+
+    <div class="menu">
+      <button onclick="goTo('customer.html')">👤 Manage Customers</button>
+      <button onclick="goTo('drug.html')">💉 Manage Drugs</button>
+      <button onclick="goTo('cart.html')">🛒 Manage Cart</button>
+      <button onclick="goTo('receipt.html')">💳 Sales Receipt</button>
+    </div>
+
+    <footer>Developed by Varun Rajpoot</footer>
+  </div>
+
+  <script>
+    function goTo(page) {
+      window.location.href = page;
+    }
+	
+
+  </script>
+</body>
+</html>

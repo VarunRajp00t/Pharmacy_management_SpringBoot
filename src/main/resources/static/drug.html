@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Simple Drug Management</title>
+<style>
+  body {font-family: Arial; background:#f2f4f7; display:flex; justify-content:center; align-items:center; height:100vh;}
+  .box {width:600px; background:white; padding:20px; border-radius:10px; box-shadow:0 0 10px gray;}
+  input, textarea, button {width:100%; margin:5px 0; padding:8px;}
+  button {background:#007bff; color:white; border:none; border-radius:5px; cursor:pointer;}
+  button:hover {background:#0056b3;}
+  .hidden {display:none;}
+  #output {margin-top:10px; padding:10px; background:#eef; border-radius:8px;}
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>Drug Management (Simple)</h2>
+
+  <!-- Main Menu -->
+  <div id="mainMenu">
+    <button onclick="show('addForm')">Add Drug</button>
+    <button onclick="show('updateForm')">Update Drug</button>
+    <button onclick="show('deleteForm')">Delete Drug</button>
+    <button onclick="show('viewAll')">Show All Drugs</button>
+    <button onclick="show('expired')">Expired Drugs</button>
+    <button onclick="show('getById')">Get By ID</button>
+	
+	<button class="btn-back" onclick="goBack()">⬅ Back to Main Page</button>
+  </div>
+
+  <!-- Add -->
+  <div id="addForm" class="hidden">
+    <input id="drugName" placeholder="Drug Name">
+    <input id="manufacturer" placeholder="Manufacturer">
+    <input id="expiryDate" type="date">
+    <input id="quantity" type="number" placeholder="Quantity">
+    <input id="price" type="number" placeholder="Price">
+    <textarea id="description" placeholder="Description"></textarea>
+    <input id="tags" placeholder="Tags">
+    <button onclick="addDrug()">Submit</button>
+    <button onclick="back()">Back</button>
+  </div>
+
+  <!-- Update -->
+  <div id="updateForm" class="hidden">
+    <input id="uid" type="number" placeholder="Drug ID">
+    <input id="udrugName" placeholder="New Drug Name">
+    <input id="umanufacturer" placeholder="Manufacturer">
+    <input id="uexpiryDate" type="date">
+    <input id="uquantity" type="number" placeholder="Quantity">
+    <input id="uprice" type="number" placeholder="Price">
+    <textarea id="udescription" placeholder="Description"></textarea>
+    <input id="utags" placeholder="Tags">
+    <button onclick="updateDrug()">Update</button>
+    <button onclick="back()">Back</button>
+  </div>
+
+  <!-- Delete -->
+  <div id="deleteForm" class="hidden">
+    <input id="did" type="number" placeholder="Drug ID">
+    <button onclick="deleteDrug()">Delete</button>
+    <button onclick="back()">Back</button>
+  </div>
+
+  <!-- View All -->
+  <div id="viewAll" class="hidden">
+    <button onclick="getAll()">Show All</button>
+    <button onclick="back()">Back</button>
+  </div>
+
+  <!-- Expired -->
+  <div id="expired" class="hidden">
+    <button onclick="getExpired()">Get Expired</button>
+    <button onclick="back()">Back</button>
+  </div>
+
+  <!-- Get by ID -->
+  <div id="getById" class="hidden">
+    <input id="gid" type="number" placeholder="Enter ID">
+    <button onclick="getById()">Search</button>
+    <button onclick="back()">Back</button>
+  </div>
+
+  <div id="output"></div>
+</div>
+
+<script>
+const BASE = "http://localhost:8080/drugs";
+
+function show(id) {
+  hideAll();
+  document.getElementById(id).classList.remove("hidden");
+}
+function back() {
+  hideAll();
+  document.getElementById("mainMenu").classList.remove("hidden");
+  document.getElementById("output").innerHTML = "";
+}
+function hideAll() {
+  ["addForm","updateForm","deleteForm","viewAll","expired","getById","mainMenu"]
+  .forEach(id => document.getElementById(id).classList.add("hidden"));
+}
+
+function addDrug() {
+  const drug = {
+    drugName: document.getElementById("drugName").value,
+    manufacturer: document.getElementById("manufacturer").value,
+    expiryDate: document.getElementById("expiryDate").value,
+    quantity: document.getElementById("quantity").value,
+    price: document.getElementById("price").value,
+    description: document.getElementById("description").value,
+    tags: document.getElementById("tags").value
+  };
+  fetch(BASE, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(drug)
+  }).then(r => r.ok ? msg("Drug Added ✅") : msg("Error adding drug ❌"));
+}
+
+function updateDrug() {
+  const id = document.getElementById("uid").value;
+  const drug = {
+    drugName: document.getElementById("udrugName").value,
+    manufacturer: document.getElementById("umanufacturer").value,
+    expiryDate: document.getElementById("uexpiryDate").value,
+    quantity: document.getElementById("uquantity").value,
+    price: document.getElementById("uprice").value,
+    description: document.getElementById("udescription").value,
+    tags: document.getElementById("utags").value
+  };
+  fetch(`${BASE}/${id}`, {
+    method: "PUT",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(drug)
+  }).then(r => r.ok ? msg("Drug Updated ✅") : msg("Error updating drug ❌"));
+}
+
+function deleteDrug() {
+  const id = document.getElementById("did").value;
+  fetch(`${BASE}/${id}`, { method: "DELETE" })
+  .then(r => r.ok ? msg("Drug Deleted ✅") : msg("Delete failed ❌"));
+}
+
+function getAll() {
+  fetch(BASE)
+  .then(res => res.json())
+  .then(data => renderTable(data))
+  .catch(() => msg("Error fetching all ❌"));
+}
+
+function getExpired() {
+  fetch(`${BASE}/expired`)
+  .then(res => res.json())
+  .then(data => renderTable(data))
+  .catch(() => msg("Error fetching expired ❌"));
+}
+
+function getById() {
+  const id = document.getElementById("gid").value;
+  fetch(`${BASE}/${id}`)
+  .then(res => res.json())
+  .then(d => {
+    document.getElementById("output").innerHTML = `
+      <p><b>ID:</b> ${d.id}</p>
+      <p><b>Name:</b> ${d.drugName}</p>
+      <p><b>Manufacturer:</b> ${d.manufacturer}</p>
+      <p><b>Expiry:</b> ${d.expiryDate}</p>
+      <p><b>Quantity:</b> ${d.quantity}</p>
+      <p><b>Price:</b> ₹${d.price}</p>
+      <p><b>Description:</b> ${d.description}</p>
+      <p><b>Tags:</b> ${d.tags}</p>`;
+  })
+  .catch(() => msg("Drug not found ❌"));
+}
+
+function renderTable(data) {
+  if (data.length === 0) return msg("No data found ❌");
+  let html = "<table border='1'><tr><th>ID</th><th>Name</th><th>Manufacturer</th><th>Expiry</th><th>Qty</th><th>Price</th></tr>";
+  data.forEach(d => {
+    html += `<tr><td>${d.id}</td><td>${d.drugName}</td><td>${d.manufacturer}</td><td>${d.expiryDate}</td><td>${d.quantity}</td><td>₹${d.price}</td></tr>`;
+  });
+  html += "</table>";
+  document.getElementById("output").innerHTML = html;
+}
+
+function msg(text) {
+  document.getElementById("output").innerHTML = `<p>${text}</p>`;
+}
+function goBack() {
+      window.location.href = "index.html"; 
+    }
+
+</script>
+</body>
+</html>

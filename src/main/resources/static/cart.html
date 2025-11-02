@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Pharmacy Cart</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #eef2f3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .box {
+      width: 420px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .hidden { display: none; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: center;
+    }
+    #message {
+      text-align: center;
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>💊 Smart Pharmacy Cart</h2>
+
+    <!-- Email Section -->
+    <div id="emailSection">
+      <input type="email" id="email" placeholder="Enter your email">
+      <button onclick="startCart()">Start</button>
+	  <button class="btn-back" onclick="goBack()">⬅ Back to Main Page</button>
+    </div>
+
+    <!-- Main Menu -->
+    <div id="menu" class="hidden">
+      <button onclick="showAdd()">Add Item</button>
+      <button onclick="showCart()">View Cart</button>
+      <button onclick="checkout()">Checkout</button>
+    </div>
+
+    <!-- Add Item -->
+    <div id="addItem" class="hidden">
+      <input type="number" id="drugId" placeholder="Drug ID">
+      <input type="number" id="quantity" placeholder="Quantity">
+      <button onclick="addToCart()">Add to Cart</button>
+      <button onclick="goBack()">Back</button>
+    </div>
+
+    <!-- Cart View -->
+    <div id="cartView" class="hidden">
+      <div id="cartTable"></div>
+      <button onclick="checkout()">Checkout</button>
+      <button onclick="goBack()">Back</button>
+    </div>
+
+    <p id="message"></p>
+  </div>
+
+  <script>
+    const baseUrl = "http://localhost:8080/cart";
+
+    // Step 1: Start cart session
+    function startCart() {
+      const email = document.getElementById("email").value.trim();
+      if (email === "") {
+        alert("Please enter your email!");
+        return;
+      }
+      localStorage.setItem("customerEmail", email);
+      document.getElementById("emailSection").classList.add("hidden");
+      document.getElementById("menu").classList.remove("hidden");
+      showMessage("Welcome, " + email);
+    }
+
+    // Step 2: Show add item form
+    function showAdd() {
+      document.getElementById("menu").classList.add("hidden");
+      document.getElementById("addItem").classList.remove("hidden");
+    }
+
+    // Step 3: Add to cart (API call)
+    function addToCart() {
+      const email = localStorage.getItem("customerEmail");
+      const drugId = document.getElementById("drugId").value;
+      const quantity = document.getElementById("quantity").value;
+
+      if (drugId === "" || quantity === "") {
+        alert("Enter Drug ID and Quantity!");
+        return;
+      }
+
+      fetch(`${baseUrl}/add?email=${email}&drugId=${drugId}&quantity=${quantity}`, {
+        method: "POST"
+      })
+      .then(res => res.text())
+      .then(msg => showMessage(msg))
+      .catch(() => alert("Error adding to cart"));
+    }
+
+    // Step 4: View cart items
+    function showCart() {
+      const email = localStorage.getItem("customerEmail");
+      fetch(`${baseUrl}/view?email=${email}`)
+        .then(res => res.json())
+        .then(items => {
+          document.getElementById("menu").classList.add("hidden");
+          document.getElementById("cartView").classList.remove("hidden");
+
+          let html = "<h3>Your Cart</h3>";
+          if (items.length === 0) {
+            html += "<p>Cart is empty!</p>";
+          } else {
+            html += "<table><tr><th>Drug Name</th><th>Qty</th><th>Price</th></tr>";
+            let total = 0;
+            items.forEach(i => {
+              html += `<tr><td>${i.drug.name}</td><td>${i.quantity}</td><td>₹${i.drug.price}</td></tr>`;
+              total += i.drug.price * i.quantity;
+            });
+            html += `</table><p><b>Total: ₹${total}</b></p>`;
+          }
+          document.getElementById("cartTable").innerHTML = html;
+        })
+        .catch(() => alert("Error loading cart"));
+    }
+
+    // Step 5: Checkout
+    function checkout() {
+      const email = localStorage.getItem("customerEmail");
+      fetch(`${baseUrl}/checkout?email=${email}`, { method: "POST" })
+        .then(res => res.text())
+        .then(msg => showMessage(msg))
+        .catch(() => alert("Checkout failed"));
+    }
+
+    // Step 6: Go back to menu
+    function goBack() {
+      document.getElementById("addItem").classList.add("hidden");
+      document.getElementById("cartView").classList.add("hidden");
+      document.getElementById("menu").classList.remove("hidden");
+    }
+
+    // Utility: Show message below
+    function showMessage(msg) {
+      const m = document.getElementById("message");
+      m.innerHTML = msg;
+      setTimeout(() => { m.innerHTML = ""; }, 4000);
+    }
+	
+	function goBack() {
+	      window.location.href = "index.html";
+	    }
+
+  </script>
+</body>
+</html>
