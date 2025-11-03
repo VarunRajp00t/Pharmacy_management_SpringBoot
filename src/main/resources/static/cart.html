@@ -147,7 +147,7 @@
             html += "<table><tr><th>Drug Name</th><th>Qty</th><th>Price</th></tr>";
             let total = 0;
             items.forEach(i => {
-              html += `<tr><td>${i.drug.name}</td><td>${i.quantity}</td><td>₹${i.drug.price}</td></tr>`;
+              html += `<tr><td>${i.drug.drugName}</td><td>${i.quantity}</td><td>₹${i.drug.price}</td></tr>`;
               total += i.drug.price * i.quantity;
             });
             html += `</table><p><b>Total: ₹${total}</b></p>`;

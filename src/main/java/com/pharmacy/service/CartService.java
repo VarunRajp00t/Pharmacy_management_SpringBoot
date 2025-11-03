@@ -37,23 +37,32 @@ public class CartService {
             return "Customer not found!";
         }
 
+        // Step 1: Check if drug exists
         Drug drug = drugRepository.findById(drugId).orElse(null);
         if (drug == null) {
-            return "Drug not found!";
+            return "Drug not found! Please check the drug ID.";
         }
 
+        // Step 2: Check stock
         if (drug.getQuantity() < quantity) {
             return "Not enough stock available!";
         }
 
+        // Step 3: Create and save cart
         Cart cart = new Cart();
         cart.setCustomer(customer);
         cart.setDrug(drug);
         cart.setQuantity(quantity);
-        cartRepository.save(cart);
+
+        try {
+            cartRepository.save(cart);
+        } catch (Exception e) {
+            return "Error adding to cart: " + e.getMessage();
+        }
 
         return "Drug added to cart successfully!";
     }
+
 
     // View Cart
     public List<Cart> viewCart(String email) {

@@ -1,170 +1,133 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Sales Receipt Management</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f6f7;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      width: 800px;
-      margin: 40px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h2 {
-      text-align: center;
-      color: #333;
-    }
-    .search-section {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    input {
-      padding: 8px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      width: 180px;
-    }
-    button {
-      padding: 8px 15px;
-      margin-left: 5px;
-      border: none;
-      background-color: #007bff;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      text-align: center;
-      padding: 10px;
-    }
-    th {
-      background-color: #007bff;
-      color: white;
-    }
-    tr:nth-child(even) {
-      background-color: #f2f2f2;
-    }
-    .no-data {
-      text-align: center;
-      color: #777;
-    }
-  </style>
+	<meta charset="UTF-8">
+	<title>💳 Sales Receipt Management</title>
+	<style>
+		body {
+			font-family: 'Poppins', sans-serif;
+			background-color: #f8f9fa;
+			padding: 40px;
+		}
+
+		h2 {
+			color: #333;
+			text-align: center;
+		}
+
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			margin-top: 20px;
+		}
+
+		table,
+		th,
+		td {
+			border: 1px solid #ccc;
+			padding: 10px;
+		}
+
+		th {
+			background-color: #007bff;
+			color: white;
+		}
+
+		td {
+			text-align: center;
+		}
+
+		.form-container {
+			margin-bottom: 30px;
+			background: #fff;
+			padding: 20px;
+			border-radius: 10px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+		}
+
+		input,
+		select {
+			padding: 8px;
+			margin: 5px;
+		}
+
+		button {
+			background-color: #007bff;
+			color: white;
+			border: none;
+			padding: 10px 20px;
+			border-radius: 5px;
+			cursor: pointer;
+		}
+	</style>
 </head>
+
 <body>
-  <div class="container">
-    <h2>💳 Sales Receipt Management</h2>
+	<h2>💳 Sales Receipt Management</h2>
 
-    <div class="search-section">
-      <input type="number" id="receiptId" placeholder="Enter Receipt ID">
-      <button onclick="getReceiptById()">Search</button>
-      <button onclick="getAllReceipts()">Show All</button>
-	  <button class="btn-back" onclick="goBack()">⬅ Back to Main Page</button>
-    </div>
+	<div class="form-container">
+		<button class="btn-back" onclick="goBack()">⬅ Back to Main Page</button>
+	</div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Customer Name</th>
-          <th>Date</th>
-          <th>Total Amount</th>
-          <th>Payment Method</th>
-        </tr>
-      </thead>
-      <tbody id="receiptTableBody">
-        <tr><td colspan="5" class="no-data">No data available</td></tr>
-      </tbody>
-    </table>
-  </div>
+	<table id="receiptTable">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Customer Name</th>
+				<th>Date</th>
+				<th>Total Amount</th>
+				<th>Payment Method</th>
+				<th>Action</th>
+			</tr>
+		</thead>
+		<tbody></tbody>
+	</table>
 
-  <script>
-    var baseUrl = "http://localhost:8080/receipt";
+	<script>
+		async function loadReceipts() {
+			const res = await fetch("http://localhost:8080/sales/all");
+			const data = await res.json();
+			const tableBody = document.querySelector("#receiptTable tbody");
+			tableBody.innerHTML = "";
 
-    // Show all receipts
-    function getAllReceipts() {
-      fetch(baseUrl + "/all")
-      .then(response => response.json())
-      .then(data => showTable(data))
-      .catch(error => {
-        console.log("Error:", error);
-        showNoData("Unable to load receipts");
-      });
-    }
+			data.forEach(r => {
+				tableBody.innerHTML += `
+          <tr>
+            <td>${r.id}</td>
+            <td>${r.customer.name}</td>
+            <td>${r.purchaseDate.replace("T", " ").slice(0, 19)}</td>
+            <td>₹${r.totalAmount}</td>
+            <td>${r.paymentMethod}</td>
+            <td><button onclick="deleteReceipt(${r.id})">🗑 Delete</button></td>
+          </tr>
+        `;
+			});
+		}
 
-    // Get receipt by ID
-    function getReceiptById() {
-      var id = document.getElementById("receiptId").value;
-      if (id === "") {
-        alert("Please enter a receipt ID!");
-        return;
-      }
+		async function addReceipt() {
+			const customerId = document.getElementById("customerId").value;
+			const totalAmount = document.getElementById("totalAmount").value;
+			const paymentMethod = document.getElementById("paymentMethod").value;
 
-      fetch(baseUrl + "/" + id)
-      .then(response => response.json())
-      .then(data => {
-        if (data && data.id) {
-          showTable([data]);
-        } else {
-          showNoData("Receipt not found");
-        }
-      })
-      .catch(error => {
-        console.log("Error:", error);
-        showNoData("Error fetching receipt");
-      });
-    }
+			await fetch(`http://localhost:8080/sales/add?customerId=${customerId}&totalAmount=${totalAmount}&paymentMethod=${paymentMethod}`, {
+				method: "POST"
+			});
+			loadReceipts();
+		}
 
-    // Show receipts in table
-    function showTable(receipts) {
-      var body = document.getElementById("receiptTableBody");
-      body.innerHTML = "";
+		async function deleteReceipt(id) {
+			await fetch(`http://localhost:8080/sales/delete/${id}`, {method: "DELETE"});
+			loadReceipts();
+		}
 
-      if (!receipts || receipts.length === 0) {
-        showNoData("No receipts found");
-        return;
-      }
+		loadReceipts();
+		
+		function goBack() {
+		      window.location.href = "index.html"; 
+		    }
 
-      for (var i = 0; i < receipts.length; i++) {
-        var r = receipts[i];
-        var row = "<tr>" +
-                  "<td>" + (r.id || "-") + "</td>" +
-                  "<td>" + (r.customerName || "-") + "</td>" +
-                  "<td>" + (r.date || "-") + "</td>" +
-                  "<td>" + (r.totalAmount || "-") + "</td>" +
-                  "<td>" + (r.paymentMethod || "-") + "</td>" +
-                  "</tr>";
-        body.innerHTML += row;
-      }
-    }
-
-    // Show message when no data found
-    function showNoData(message) {
-      var body = document.getElementById("receiptTableBody");
-      body.innerHTML = "<tr><td colspan='5' class='no-data'>" + message + "</td></tr>";
-    }
-	
-	function goBack() {
-	      window.location.href = "index.html"; 
-	    }
-
-
-  </script>
+	</script>
 </body>
+
 </html>

@@ -1,11 +1,8 @@
 package com.pharmacy.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
+import lombok.*;
 import java.time.LocalDateTime;
 
 @NoArgsConstructor
@@ -22,11 +19,20 @@ public class SalesReceipt {
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
+    @JsonIgnoreProperties("salesReceipts")  // avoid circular reference
     private Customer customer;
 
     private double totalAmount;
-
     private LocalDateTime purchaseDate;
+    private String paymentMethod;
 
-    private String paymentMethod; // optional
+    @PrePersist
+    public void onCreate() {
+        this.purchaseDate = LocalDateTime.now();
+    }
+
+    @Transient
+    public String getCustomerName() {
+        return customer != null ? customer.getName() : "Unknown";
+    }
 }
